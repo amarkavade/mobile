@@ -1,0 +1,48 @@
+<?php
+
+function CSVExport($query) {
+		$sql_csv = mysql_query($query); 
+		header('Content-Type: text/csv; charset=utf-8');
+		header("Content-type:text/octect-stream");
+		header("Content-Disposition:attachment;filename=".date('d-m-Y')."-TestResult.csv");
+		// create a file pointer connected to the output stream
+		$output = fopen('php://output', 'w');
+		// output the column headings
+		fputcsv($output, array('Date', 'Transaction #', 'POSID', 'Location', 'Device ID', 'Make', 'Model', 'OS', 'IMEI/ESN','Time To Test(sec)', 'Rooted', 'MAC', 'Battery', 'Phone No', 'Test Result'));		
+		while($row = mysql_fetch_object($sql_csv)) {				
+				$id = $row->id;
+				$location_id = $row->location_id;
+				$device_id = $row->device_id;
+				$timetotest = $row->timetotest;
+				$rooted = $row->rooted;
+				$mac = $row->mac;
+				$battery = $row->battery;
+				$phone_number = $row->phone_number;
+
+				$tmestamp = $row->datetime;
+				$resultdate = changeTimezone($tmestamp);
+              
+				
+				$sqlloc = mysql_fetch_object(mysql_query("SELECT locationname FROM location where location_id = $location_id "));
+				$reslocname = $sqlloc->locationname;
+				
+				$txnctnid = $row->transaction_id; 
+				$posid = $row->posid; 
+			
+				$make = $row->make; 
+				$model = $row->model; 
+				$os = $row->os; 
+				$imei = $row->imei; 
+				$testOP = '';
+				$testOP = getTestResult($row->transaction_id);
+			
+				//fputcsv($output, $row);
+				
+				fputcsv($output, array($resultdate,$txnctnid,$posid,$reslocname,$device_id,$make,$model,$os,$imei,$timetotest,$rooted,$mac,$battery,$phone_number,$testOP));
+				
+				//print '"' . stripslashes(implode('","',$assoc)) . "\"\n" ;  
+			}
+		exit;
+	}
+	
+	?>
